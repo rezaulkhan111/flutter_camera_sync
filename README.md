@@ -21,7 +21,6 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/rezaulkhan111/flutter_camera_sync.git
-    cd flutter_camera_sync
     ```
 2.  **Install dependencies:**
     ```bash
@@ -37,10 +36,19 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
     ```
 
 ## Screenshots
-| Camera UI | Upload Manager |
-|-----------|----------------|
-| <img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/camera.jpeg" width="200" height="400"/> | <img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/upload.jpeg" width="200" height="400"/> |
+<html>
+<table border="0">
+  <tr>
+    <td align="center">Camera UI<br/><img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/camera.jpeg" width="200" /></td>
+    <td align="center">Upload Manager<br/><img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/upload.jpeg" width="200" /></td>
+  </tr>
+<tr>
+<td align="center">Live App Demo<br/><img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/camera_sync.gif" width="200" /></td>
+</tr>
+</table>
+</html>
 
-<img src="https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/camera_sync.gif" width="200" height="400"/>
+## APK Submission
 
-*(Note: Replace placeholders with actual screenshots from the app execution.)*
+The release APK can be downloaded from the following link:
+[Link to Release APK](https://raw.githubusercontent.com/rezaulkhan111/flutter_geo_fenced_attendance/refs/heads/master/photo/geo_fenced_app_release.apk)

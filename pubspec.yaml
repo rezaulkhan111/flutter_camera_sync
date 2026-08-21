@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   camera: ^0.12.0+2
   path_provider: ^2.1.2
-  workmanager: ^0.10.9
+  workmanager: ^0.10.7
   connectivity_plus: ^7.3.1
   path: ^1.9.0
   sqflite: ^2.3.0
