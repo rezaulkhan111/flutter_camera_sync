@@ -16,32 +16,17 @@ void main() async {
   runApp(MyApp(cameras: cameras));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   final List<CameraDescription> cameras;
 
   const MyApp({super.key, required this.cameras});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.dark;
-
-  void toggleTheme() {
-    setState(() {
-      _themeMode = _themeMode == ThemeMode.dark
-          ? ThemeMode.light
-          : ThemeMode.dark;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Camera Sync',
       debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
+      themeMode: ThemeMode.system,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
@@ -59,8 +44,7 @@ class _MyAppState extends State<MyApp> {
         scaffoldBackgroundColor: const Color(0xFF0D1117),
       ),
       home: CameraPreviewScreen(
-        cameras: widget.cameras,
-        onThemeToggle: toggleTheme,
+        cameras: cameras,
       ),
     );
   }

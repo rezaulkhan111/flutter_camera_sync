@@ -10,12 +10,10 @@ import '../services/sync_service.dart';
 
 class CameraPreviewScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
-  final VoidCallback onThemeToggle;
 
   const CameraPreviewScreen({
     super.key,
     required this.cameras,
-    required this.onThemeToggle,
   });
 
   @override
@@ -26,6 +24,8 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
+  int _currentCameraIndex = 0;
+  FlashMode _currentFlashMode = FlashMode.off;
   double _currentZoomLevel = 1.0;
   double _minAvailableZoom = 1.0;
   double _maxAvailableZoom = 1.0;
@@ -43,13 +43,120 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
       _initializeControllerFuture = Future.error("No cameras available");
       return;
     }
-    _controller = CameraController(widget.cameras[0], ResolutionPreset.high);
+    _initializeCamera(_currentCameraIndex);
+  }
+
+  Future<void> _initializeCamera(int index) async {
+    _controller = CameraController(
+      widget.cameras[index],
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
 
     _initializeControllerFuture = _controller.initialize().then((_) async {
       _minAvailableZoom = await _controller.getMinZoomLevel();
       _maxAvailableZoom = await _controller.getMaxZoomLevel();
-      setState(() {});
+      await _controller.setFlashMode(_currentFlashMode);
+      if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _switchCamera() async {
+    if (widget.cameras.length < 2) return;
+
+    _currentCameraIndex = (_currentCameraIndex + 1) % widget.cameras.length;
+    await _controller.dispose();
+    _initializeCamera(_currentCameraIndex);
+  }
+
+  Future<void> _toggleFlashMode() async {
+    if (!_controller.value.isInitialized) return;
+
+    FlashMode nextMode;
+    switch (_currentFlashMode) {
+      case FlashMode.off:
+        nextMode = FlashMode.auto;
+        break;
+      case FlashMode.auto:
+        nextMode = FlashMode.always;
+        break;
+      case FlashMode.always:
+        nextMode = FlashMode.torch;
+        break;
+      case FlashMode.torch:
+        nextMode = FlashMode.off;
+        break;
+    }
+
+    try {
+      await _controller.setFlashMode(nextMode);
+      setState(() {
+        _currentFlashMode = nextMode;
+      });
+      
+      // Provide user feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Flash set to ${nextMode.name.toUpperCase()}"),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          width: 200,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error setting flash mode: $e");
+      // If auto fails, skip to always
+      if (nextMode == FlashMode.auto) {
+        _currentFlashMode = FlashMode.auto; // pretend it's auto to cycle correctly
+        _toggleFlashMode();
+      }
+    }
+  }
+
+  IconData _getFlashIcon() {
+    switch (_currentFlashMode) {
+      case FlashMode.off:
+        return Icons.flash_off;
+      case FlashMode.auto:
+        return Icons.flash_auto;
+      case FlashMode.always:
+        return Icons.flash_on;
+      case FlashMode.torch:
+        return Icons.highlight;
+    }
+  }
+
+  void _showSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Settings",
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.info_outline, color: Colors.white),
+              title: const Text("App Version", style: TextStyle(color: Colors.white)),
+              trailing: const Text("1.0.0", style: TextStyle(color: Colors.white70)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera, color: Colors.white),
+              title: const Text("Resolution", style: TextStyle(color: Colors.white)),
+              trailing: const Text("High", style: TextStyle(color: Colors.white70)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -102,12 +209,15 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
   Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
+      // Re-apply current flash mode to ensure it's active
+      await _controller.setFlashMode(_currentFlashMode);
+      
       final image = await _controller.takePicture();
       setState(() {
         _capturedImages.add(image);
       });
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Error taking picture: $e");
     }
   }
 
@@ -142,8 +252,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              UploadManagerScreen(onThemeToggle: widget.onThemeToggle),
+          builder: (context) => const UploadManagerScreen(),
         ),
       );
     }
@@ -221,28 +330,18 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                             Row(
                               children: [
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.flash_on,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {},
-                                ),
-                                IconButton(
                                   icon: Icon(
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Icons.light_mode
-                                        : Icons.dark_mode,
+                                    _getFlashIcon(),
                                     color: Colors.white,
                                   ),
-                                  onPressed: widget.onThemeToggle,
+                                  onPressed: _toggleFlashMode,
                                 ),
                                 IconButton(
                                   icon: const Icon(
                                     Icons.settings,
                                     color: Colors.white,
                                   ),
-                                  onPressed: () {},
+                                  onPressed: _showSettings,
                                 ),
                               ],
                             ),
@@ -287,7 +386,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
 
                     // Zoom Buttons
                     Positioned(
-                      bottom: 180,
+                      bottom: _capturedImages.isNotEmpty ? 280 : 180,
                       left: 0,
                       right: 0,
                       child: Row(
@@ -308,111 +407,118 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
 
                     // Bottom Controls
                     Positioned(
-                      bottom: 40,
+                      bottom: 0,
                       left: 0,
                       right: 0,
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      child: SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Gallery/Last Image Preview
-                              Stack(
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  Container(
-                                    width: 60,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white24,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.image,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  if (_capturedImages.isNotEmpty)
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.blue,
-                                          shape: BoxShape.circle,
+                                  // Gallery/Last Image Preview
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white24,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
-                                        child: Text(
-                                          "${_capturedImages.length}",
-                                          style: const TextStyle(
+                                        child: const Icon(
+                                          Icons.image,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      if (_capturedImages.isNotEmpty)
+                                        Positioned(
+                                          right: 0,
+                                          top: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.blue,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              "${_capturedImages.length}",
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
+                                  // Shutter Button
+                                  GestureDetector(
+                                    onTap: _takePicture,
+                                    child: Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 4,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: const BoxDecoration(
                                             color: Colors.white,
-                                            fontSize: 10,
+                                            shape: BoxShape.circle,
                                           ),
                                         ),
                                       ),
                                     ),
+                                  ),
+
+                                  // Switch Camera
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.sync,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                                    onPressed: _switchCamera,
+                                  ),
                                 ],
                               ),
-
-                              // Shutter Button
-                              GestureDetector(
-                                onTap: _takePicture,
-                                child: Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 4,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Container(
-                                      width: 60,
-                                      height: 60,
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
+                              const SizedBox(height: 20),
+                              if (_capturedImages.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 10.0),
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      minimumSize:
+                                          const Size(double.infinity, 50),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
+                                    onPressed: _uploadBatch,
+                                    icon: const Icon(Icons.upload),
+                                    label: Text(
+                                      "UPLOAD BATCH (${_capturedImages.length})",
+                                    ),
                                   ),
                                 ),
-                              ),
-
-                              // Switch Camera
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.sync,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                                onPressed: () {},
-                              ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          if (_capturedImages.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24.0,
-                              ),
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: _uploadBatch,
-                                icon: const Icon(Icons.upload),
-                                label: Text(
-                                  "UPLOAD BATCH (${_capturedImages.length})",
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
                   ],

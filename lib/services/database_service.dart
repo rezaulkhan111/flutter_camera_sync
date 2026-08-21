@@ -21,12 +21,25 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      ''');
+      await db.insert('settings', {'key': 'isPaused', 'value': 'false'});
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -49,6 +62,33 @@ class DatabaseService {
         FOREIGN KEY (batchId) REFERENCES batches (id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
+
+    await db.insert('settings', {'key': 'isPaused', 'value': 'false'});
+  }
+
+  Future<bool> isSyncPaused() async {
+    final db = await instance.database;
+    final result =
+        await db.query('settings', where: 'key = ?', whereArgs: ['isPaused']);
+    if (result.isEmpty) return false;
+    return result.first['value'] == 'true';
+  }
+
+  Future<void> setSyncPaused(bool paused) async {
+    final db = await instance.database;
+    await db.update(
+      'settings',
+      {'value': paused ? 'true' : 'false'},
+      where: 'key = ?',
+      whereArgs: ['isPaused'],
+    );
   }
 
   Future<int> insertBatch(ImageBatch batch) async {

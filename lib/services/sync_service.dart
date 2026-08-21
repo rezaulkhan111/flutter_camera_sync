@@ -13,6 +13,13 @@ void callbackDispatcher() {
 
     try {
       final dbService = DatabaseService.instance;
+      
+      // Check if sync is paused
+      if (await dbService.isSyncPaused()) {
+        debugPrint("Sync is paused. Skipping background task.");
+        return true;
+      }
+
       final pendingImages = await dbService.getPendingImages();
 
       if (pendingImages.isEmpty) return true;
@@ -72,5 +79,18 @@ class SyncService {
       "syncImages",
       constraints: Constraints(networkType: NetworkType.connected),
     );
+  }
+
+  static Future<void> togglePause() async {
+    final db = DatabaseService.instance;
+    final isPaused = await db.isSyncPaused();
+    await db.setSyncPaused(!isPaused);
+    if (isPaused) {
+      // If we were paused and now resuming, schedule a sync
+      scheduleSync();
+    } else {
+      // If we are pausing, cancel current tasks
+      Workmanager().cancelAll();
+    }
   }
 }

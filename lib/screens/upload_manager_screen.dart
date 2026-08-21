@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../models/batch_model.dart';
 import '../models/image_model.dart';
+import '../services/sync_service.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class UploadManagerScreen extends StatefulWidget {
-  final VoidCallback onThemeToggle;
-
-  const UploadManagerScreen({super.key, required this.onThemeToggle});
+  const UploadManagerScreen({super.key});
 
   @override
   State<UploadManagerScreen> createState() => _UploadManagerScreenState();
@@ -19,21 +18,37 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
   List<ImageBatch> _batches = [];
   Map<int, List<ImageModel>> _batchImages = {};
   bool _isOnline = true;
+  bool _isPaused = false;
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _checkConnectivity();
-    Connectivity().onConnectivityChanged.listen((
-      List<ConnectivityResult> result,
-    ) {
+    _checkPauseStatus();
+    Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> result) {
       if (mounted) {
         setState(() {
           _isOnline = !result.contains(ConnectivityResult.none);
         });
       }
     });
+  }
+
+  Future<void> _checkPauseStatus() async {
+    final paused = await DatabaseService.instance.isSyncPaused();
+    if (mounted) {
+      setState(() {
+        _isPaused = paused;
+      });
+    }
+  }
+
+  Future<void> _togglePause() async {
+    await SyncService.togglePause();
+    await _checkPauseStatus();
   }
 
   Future<void> _checkConnectivity() async {
@@ -59,6 +74,8 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
         _batchImages = batchImagesMap;
       });
     }
+
+    await _checkPauseStatus();
 
     // Refresh periodically if there are pending uploads
     if (batches.any((b) => b.status != 'synced') && mounted) {
@@ -89,13 +106,6 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
           style: TextStyle(color: theme.textTheme.titleLarge?.color),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              isDark ? Icons.light_mode : Icons.dark_mode,
-              color: theme.iconTheme.color,
-            ),
-            onPressed: widget.onThemeToggle,
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Row(
@@ -150,12 +160,15 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
                     fontSize: 12,
                   ),
                 ),
-                const Text(
-                  "PAUSE ALL",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: _togglePause,
+                  child: Text(
+                    _isPaused ? "RESUME ALL" : "PAUSE ALL",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
