@@ -37,8 +37,11 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
     ```
 
 ## Screenshots
-| Camera UI | Upload Manager (Dark) | Upload Manager (Light) |
-|-----------|-----------------------|------------------------|
+| Camera UI | Upload Manager|
+|-----------|---------------|
 | ![Camera](https://via.placeholder.com/200x400?text=Camera+UI) | ![Dark Mode](https://via.placeholder.com/200x400?text=Dark+Mode) | ![Light Mode](https://via.placeholder.com/200x400?text=Light+Mode) |
+
+
+<img src="https://github.com/rezaulkhan111/flutter_camera_sync/blob/master/photo/camera_sync.gif"/>
 
 *(Note: Replace placeholders with actual screenshots from the app execution.)*
