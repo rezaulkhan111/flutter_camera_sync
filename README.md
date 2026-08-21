@@ -20,7 +20,7 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
 ## How to Run
 1.  **Clone the repository:**
     ```bash
-    git clone 
+    git clone https://github.com/rezaulkhan111/flutter_camera_sync.git
     cd flutter_camera_sync
     ```
 2.  **Install dependencies:**
