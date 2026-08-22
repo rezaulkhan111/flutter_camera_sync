@@ -51,4 +51,4 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
 ## APK Submission
 
 The release APK can be downloaded from the following link:
-[Link to Release APK](https://raw.githubusercontent.com/rezaulkhan111/flutter_geo_fenced_attendance/refs/heads/master/photo/geo_fenced_app_release.apk)
+[Link to Release APK](https://raw.githubusercontent.com/rezaulkhan111/flutter_camera_sync/refs/heads/master/photo/camera_sync_app_release.apk)
