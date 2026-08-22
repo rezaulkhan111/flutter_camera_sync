@@ -32,7 +32,7 @@ The project follows a **Layered Architecture** (Models, Services, Screens, and W
     - Android Gradle Plugin: 8.9.1.
 4.  **Run the application:**
     ```bash
-    flutter run --android-skip-build-dependency-validation
+    flutter run
     ```
 
 ## Screenshots
