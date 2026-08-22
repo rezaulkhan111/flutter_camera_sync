@@ -93,8 +93,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
       setState(() {
         _currentFlashMode = nextMode;
       });
-      
-      // Provide user feedback
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Flash set to ${nextMode.name.toUpperCase()}"),
@@ -105,9 +104,8 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
       );
     } catch (e) {
       debugPrint("Error setting flash mode: $e");
-      // If auto fails, skip to always
       if (nextMode == FlashMode.auto) {
-        _currentFlashMode = FlashMode.auto; // pretend it's auto to cycle correctly
+        _currentFlashMode = FlashMode.auto;
         _toggleFlashMode();
       }
     }
@@ -133,29 +131,36 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Settings",
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+      builder: (context) =>
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Settings",
+                  style: TextStyle(color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(Icons.info_outline, color: Colors.white),
+                  title: const Text(
+                      "App Version", style: TextStyle(color: Colors.white)),
+                  trailing: const Text(
+                      "1.0.0", style: TextStyle(color: Colors.white70)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera, color: Colors.white),
+                  title: const Text(
+                      "Resolution", style: TextStyle(color: Colors.white)),
+                  trailing: const Text(
+                      "High", style: TextStyle(color: Colors.white70)),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.white),
-              title: const Text("App Version", style: TextStyle(color: Colors.white)),
-              trailing: const Text("1.0.0", style: TextStyle(color: Colors.white70)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera, color: Colors.white),
-              title: const Text("Resolution", style: TextStyle(color: Colors.white)),
-              trailing: const Text("High", style: TextStyle(color: Colors.white70)),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -170,7 +175,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
   }
 
   Future<void> _handleScaleUpdate(ScaleUpdateDetails details) async {
-    // When there are not 2 pointers on screen, no scaling happens
     if (_pointers != 2) {
       return;
     }
@@ -209,9 +213,8 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
   Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
-      // Re-apply current flash mode to ensure it's active
       await _controller.setFlashMode(_currentFlashMode);
-      
+
       final image = await _controller.takePicture();
       setState(() {
         _capturedImages.add(image);
@@ -227,13 +230,14 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
     final db = DatabaseService.instance;
     final batchId = await db.insertBatch(
       ImageBatch(
-        name: "Batch ${DateTime.now().millisecondsSinceEpoch}",
+        name: "Batch ${DateTime
+            .now()
+            .millisecondsSinceEpoch}",
         createdAt: DateTime.now(),
       ),
     );
 
     for (var file in _capturedImages) {
-      // Move file to permanent storage
       final directory = await getApplicationDocumentsDirectory();
       final name = p.basename(file.path);
       final newPath = p.join(directory.path, name);
@@ -278,7 +282,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
               builder: (context, constraints) {
                 return Stack(
                   children: [
-                    // Camera Preview
                     Listener(
                       onPointerDown: (_) => _pointers++,
                       onPointerUp: (_) => _pointers--,
@@ -291,7 +294,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                       ),
                     ),
 
-                    // Focus Indicator
                     if (_focusPoint != null)
                       Positioned(
                         left: _focusPoint!.dx - 30,
@@ -305,7 +307,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                         ),
                       ),
 
-                    // Top Controls
                     SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -350,7 +351,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                       ),
                     ),
 
-                    // Zoom Slider (Right side)
                     Positioned(
                       right: 16,
                       top: constraints.maxHeight * 0.3,
@@ -384,7 +384,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                       ),
                     ),
 
-                    // Zoom Buttons
                     Positioned(
                       bottom: _capturedImages.isNotEmpty ? 280 : 180,
                       left: 0,
@@ -405,7 +404,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                       ),
                     ),
 
-                    // Bottom Controls
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -418,7 +416,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                             children: [
                               Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                                MainAxisAlignment.spaceEvenly,
                                 children: [
                                   // Gallery/Last Image Preview
                                   Stack(
@@ -429,7 +427,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                                         decoration: BoxDecoration(
                                           color: Colors.white24,
                                           borderRadius:
-                                              BorderRadius.circular(12),
+                                          BorderRadius.circular(12),
                                         ),
                                         child: const Icon(
                                           Icons.image,
@@ -458,7 +456,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                                     ],
                                   ),
 
-                                  // Shutter Button
                                   GestureDetector(
                                     onTap: _takePicture,
                                     child: Container(
@@ -484,7 +481,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                                     ),
                                   ),
 
-                                  // Switch Camera
                                   IconButton(
                                     icon: const Icon(
                                       Icons.sync,
@@ -498,13 +494,14 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                               const SizedBox(height: 20),
                               if (_capturedImages.isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 10.0),
+                                  padding: const EdgeInsets.fromLTRB(
+                                      24.0, 0, 24.0, 10.0),
                                   child: ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blue,
                                       foregroundColor: Colors.white,
                                       minimumSize:
-                                          const Size(double.infinity, 50),
+                                      const Size(double.infinity, 50),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -512,7 +509,8 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                                     onPressed: _uploadBatch,
                                     icon: const Icon(Icons.upload),
                                     label: Text(
-                                      "UPLOAD BATCH (${_capturedImages.length})",
+                                      "UPLOAD BATCH (${_capturedImages
+                                          .length})",
                                     ),
                                   ),
                                 ),

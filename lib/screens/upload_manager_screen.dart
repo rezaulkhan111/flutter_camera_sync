@@ -77,7 +77,6 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
 
     await _checkPauseStatus();
 
-    // Refresh periodically if there are pending uploads
     if (batches.any((b) => b.status != 'synced') && mounted) {
       Future.delayed(const Duration(seconds: 2), _loadData);
     }
@@ -145,7 +144,7 @@ class _UploadManagerScreenState extends State<UploadManagerScreen> {
             ),
             const SizedBox(height: 16),
             const LinearProgressIndicator(
-              value: 0.74, // Mock total progress
+              value: 0.74,
               backgroundColor: Colors.black12,
               valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
             ),

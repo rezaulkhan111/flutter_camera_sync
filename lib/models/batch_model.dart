@@ -2,7 +2,7 @@ class ImageBatch {
   final int? id;
   final String name;
   final DateTime createdAt;
-  final String status; // 'pending', 'syncing', 'synced', 'failed'
+  final String status;
 
   ImageBatch({
     this.id,

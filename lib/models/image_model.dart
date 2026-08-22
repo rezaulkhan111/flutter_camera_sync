@@ -2,7 +2,7 @@ class ImageModel {
   final int? id;
   final String path;
   final int batchId;
-  final String status; // 'pending', 'syncing', 'synced', 'failed'
+  final String status;
   final int retryCount;
 
   ImageModel({

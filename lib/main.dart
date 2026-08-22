@@ -6,10 +6,7 @@ import 'services/sync_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize cameras
   final cameras = await availableCameras();
-
-  // Initialize Workmanager for background sync
   SyncService.init();
   SyncService.scheduleSync();
 

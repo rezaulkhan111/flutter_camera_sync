@@ -13,8 +13,7 @@ void callbackDispatcher() {
 
     try {
       final dbService = DatabaseService.instance;
-      
-      // Check if sync is paused
+
       if (await dbService.isSyncPaused()) {
         debugPrint("Sync is paused. Skipping background task.");
         return true;
@@ -26,14 +25,12 @@ void callbackDispatcher() {
 
       final connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult.contains(ConnectivityResult.none)) {
-        return false; // Retry later
+        return false;
       }
 
       for (var image in pendingImages) {
         try {
-          // Update status to syncing
           await dbService.updateImageStatus(image.id!, 'syncing');
-
           bool success = await ApiService.uploadImage(image.path);
 
           if (success) {
@@ -50,7 +47,6 @@ void callbackDispatcher() {
         }
       }
 
-      // Check batches and update their status if all images are synced
       final batches = await dbService.getAllBatches();
       for (var batch in batches) {
         final batchImages = await dbService.getImagesForBatch(batch.id!);
@@ -86,10 +82,8 @@ class SyncService {
     final isPaused = await db.isSyncPaused();
     await db.setSyncPaused(!isPaused);
     if (isPaused) {
-      // If we were paused and now resuming, schedule a sync
       scheduleSync();
     } else {
-      // If we are pausing, cancel current tasks
       Workmanager().cancelAll();
     }
   }
