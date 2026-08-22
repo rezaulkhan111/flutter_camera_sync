@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../services/database_service.dart';
@@ -318,7 +319,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
                                 Icons.close,
                                 color: Colors.white,
                               ),
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => SystemNavigator.pop(),
                             ),
                             const Text(
                               "VISUAL",
